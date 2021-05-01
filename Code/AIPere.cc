@@ -83,10 +83,12 @@ struct PLAYER_NAME : public Player {
 						}
 
 						if(not mine){
-							Dir d = getDirection(p, next, tracker);
-							return make_pair(1, d);
+							Ant aux = ant(c.id);
+							if(aux.type == Worker){
+								Dir d = getDirection(p, next, tracker);
+								return make_pair(1, d);
+							}
 						}
-						
 					}
 				}
 			}
@@ -258,7 +260,7 @@ struct PLAYER_NAME : public Player {
 		return true;
 	}
 
-	bool antArround(Pos p){
+	bool antAround(Pos p){
 		for(int i = 0; i < 4; ++i){
 			Cell c = cell(p + Dir(i));
 
@@ -268,6 +270,8 @@ struct PLAYER_NAME : public Player {
 		}
 		return false;
 	}
+
+	boo
 
 	/**
 	 * Play method, invoked once per each round.
@@ -295,8 +299,8 @@ struct PLAYER_NAME : public Player {
 					}
 				}  
 			} else{
-				bool arround = antArround(a.pos);
-				if(not arround){
+				bool around = antAround(a.pos);
+				if(not around){
 					pair<int, Dir> d = BFSReina(a.pos);
 					if(d.first != -1){
 						if(pos_ok(a.pos + d.second) and cell(a.pos + d.second).id == -1){
