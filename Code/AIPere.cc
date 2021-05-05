@@ -200,7 +200,7 @@ struct PLAYER_NAME : public Player {
 		return false;
 	}
 
-	void move2queen(Pos p, int id){
+	pair<int, Dir> move2queen(Pos p, int id){
 		Pos final;
 		queue<Pos> q;
 		q.push(p);
@@ -241,9 +241,10 @@ struct PLAYER_NAME : public Player {
 		Dir d = getDirection(p, final, tracker);
 		Cell c = cell(p + d);
 		if(pos_ok(p + d) and c.id == -1) {
-			move(id, d);
+			return make_pair(1, d);
+		} else{
+			return make_pair(-1, d);
 		}
-
 	}
 
 	bool createAnt(Ant a){
@@ -259,7 +260,8 @@ struct PLAYER_NAME : public Player {
 			Cell c = cell(p + Dir(i));
 
 			if(c.id != -1){
-				return true;
+				Ant a = ant(c.id);
+				if(a.bonus != None) return true;
 			}
 		}
 		return false;
@@ -333,22 +335,24 @@ struct PLAYER_NAME : public Player {
 		return res;
 	}
 
-	Dir pos2dir(pair<Pos, int> p){
+	pair<bool, Dir> pos2dir(pair<Pos, int> p){
 		Pos final = p.first;
 		Ant a = ant(p.second);
 		Pos inici = a.pos;
 
 		if(inici.i == final.i){
 			if(inici.j < final.j){
-				if(pos_ok(inici + Right)) return Right;
-			}else{
-				if(pos_ok(inici + Left)) return Left;
+				if(pos_ok(inici + Right)) return make_pair(true, Right);
+			} else{
+				if(pos_ok(inici + Left)) return make_pair(true, Left);
 			}
 		} else if(inici.i < final.i){
-			if(pos_ok(inici + Up)) return Up;
+			if(pos_ok(inici + Up)) return make_pair(true, Down);
 		} else{
-			if(pos_ok(inici + Down)) return Down;
+			if(pos_ok(inici + Down)) return make_pair(true, Up);
 		}
+
+		return make_pair(false, Dir(random(0, 3)));
 	}
 
 	virtual void play(){
@@ -358,8 +362,7 @@ struct PLAYER_NAME : public Player {
 
 		vector<Pos> finals;
 		map<Pos, int> moves;
-		map<int, Dir> wTracker;
-		map<int, Dir> sTracker;	
+
 		for(int i = 0; i < r.size(); ++i){
 			Ant a = ant(r[i]);
 			if(not moveQueen(a)){
@@ -389,6 +392,30 @@ struct PLAYER_NAME : public Player {
 				}
 			}
 		}
+
+		for(int i = 0; i < sold.size(); ++i){
+			Ant s  = ant(sold[i]);
+			pair<int,Dir> d = BFSGuerrer(s.pos);
+				
+			if(d.first != -1){
+				if(pos_ok(s.pos + d.second)) {
+					bool mine = false;
+					for(int j = 0; j < r.size() and not mine; ++j){
+						if(r[j] == cell(s.pos + d.second).id) mine = true;
+					}
+
+					for(int j = 0; j < wrks.size() and not mine; ++j){
+						if(wrks[j] == cell(s.pos + d.second).id) mine = true;
+					}
+
+					for(int j = 0; j < sold.size() and not mine; ++j){
+						if(sold[j] == cell(s.pos + d.second).id) mine = true;
+					}
+
+					if(not mine) moves.insert(make_pair((s.pos + d.second), s.id));
+				}
+			}
+		}
 			
 		for(int i = 0; i < wrks.size(); ++i){
 			Ant wrk  = ant(wrks[i]);
@@ -404,38 +431,38 @@ struct PLAYER_NAME : public Player {
 							
 							if(wrk.pos.i == a.pos.i){
 								if(wrk.pos.i < a.pos.i){
-									if(pos_ok(wrk.pos + Left) and cell(wrk.pos + Left).id == -1) wTracker.insert(make_pair(wrk.id, Left));
+									if(pos_ok(wrk.pos + Left) and cell(wrk.pos + Left).id == -1) moves.insert(make_pair((wrk.pos + Left), wrk.id));
 									else{
-										if(pos_ok(wrk.pos + Up) and cell(wrk.pos + Up).id == -1) wTracker.insert(make_pair(wrk.id, Up));
+										if(pos_ok(wrk.pos + Up) and cell(wrk.pos + Up).id == -1) moves.insert(make_pair((wrk.pos + Up), wrk.id));
 										else{
-											if(cell(wrk.pos + Down).id == -1) wTracker.insert(make_pair(wrk.id, Down));
+											if(cell(wrk.pos + Down).id == -1) moves.insert(make_pair((wrk.pos + Down), wrk.id));
 										} 
 									}
 								} else{
-									if(pos_ok(wrk.pos + Right) and cell(wrk.pos + Right).id == -1) wTracker.insert(make_pair(wrk.id, Right));
+									if(pos_ok(wrk.pos + Right) and cell(wrk.pos + Right).id == -1) moves.insert(make_pair((wrk.pos + Right), wrk.id));
 									else{
-										if(pos_ok(wrk.pos + Up) and cell(wrk.pos + Up).id == -1) wTracker.insert(make_pair(wrk.id, Up));
+										if(pos_ok(wrk.pos + Up) and cell(wrk.pos + Up).id == -1) moves.insert(make_pair((wrk.pos + Up), wrk.id));
 										else{
-											if(cell(wrk.pos + Down).id == -1) wTracker.insert(make_pair(wrk.id, Down));
+											if(cell(wrk.pos + Down).id == -1) moves.insert(make_pair((wrk.pos + Down), wrk.id));
 										} 
 									}
 								}
 							} 
 							if(wrk.pos.j == a.pos.j){
 								if(wrk.pos.i < a.pos.i){
-									if(pos_ok(wrk.pos + Up) and cell(wrk.pos + Up).id == -1) wTracker.insert(make_pair(wrk.id, Up));
+									if(pos_ok(wrk.pos + Up) and cell(wrk.pos + Up).id == -1) moves.insert(make_pair((wrk.pos + Up), wrk.id));
 									else{
-										if(pos_ok(wrk.pos+ Left) and cell(wrk.pos + Left).id == -1) wTracker.insert(make_pair(wrk.id, Left));
+										if(pos_ok(wrk.pos+ Left) and cell(wrk.pos + Left).id == -1) moves.insert(make_pair((wrk.pos + Left), wrk.id));
 										else{
-											if(cell(wrk.pos + Right).id == -1) wTracker.insert(make_pair(wrk.id, Right));
+											if(cell(wrk.pos + Right).id == -1) moves.insert(make_pair((wrk.pos + Right), wrk.id));
 										}
 									}
 								} else{
-									if(pos_ok(wrk.pos + Down)and cell(wrk.pos + Down).id == -1) wTracker.insert(make_pair(wrk.id, Down));
+									if(pos_ok(wrk.pos + Down)and cell(wrk.pos + Down).id == -1) moves.insert(make_pair((wrk.pos + Down), wrk.id));
 									else{
-										if(pos_ok(wrk.pos + Left) and cell(wrk.pos + Left).id == -1) wTracker.insert(make_pair(wrk.id, Left));
+										if(pos_ok(wrk.pos + Left) and cell(wrk.pos + Left).id == -1) moves.insert(make_pair((wrk.pos + Left), wrk.id));
 										else{
-											if(cell(wrk.pos + Right).id == -1) wTracker.insert(make_pair(wrk.id, Right));
+											if(cell(wrk.pos + Right).id == -1) moves.insert(make_pair((wrk.pos + Right), wrk.id));
 										} 
 									}
 								}
@@ -446,14 +473,17 @@ struct PLAYER_NAME : public Player {
 						if(d.first != -1){
 							if(pos_ok(wrk.pos + d.second)) {
 								Cell c = cell(wrk.pos + d.second);
-								if(cell(wrk.pos + d.second).id == -1) wTracker.insert(make_pair(wrk.id, d.second));
+								if(cell(wrk.pos + d.second).id == -1) moves.insert(make_pair((wrk.pos + d.second), wrk.id));
 							}
 						}
 					}
 				}
 			} else{
 				if(wrk.bonus != None){
-					move2queen(wrk.pos, wrk.id);
+					pair<int, Dir> par = move2queen(wrk.pos, wrk.id);
+					if(par.first == 1){
+						moves.insert(make_pair((wrk.pos + par.second), wrk.id));
+					}
 				} else{
 					if(c.bonus != None) take(wrk.id);
 					else{
@@ -463,7 +493,7 @@ struct PLAYER_NAME : public Player {
 							if(pos_ok(wrk.pos + d.second)){
 								Cell c = cell(wrk.pos + d.second);
 								if(not next2queen(wrk.pos + d.second)){
-									if(cell(wrk.pos + d.second).id == -1) wTracker.insert(make_pair(wrk.id, d.second));
+									if(cell(wrk.pos + d.second).id == -1) moves.insert(make_pair((wrk.pos + d.second), wrk.id));
 								}
 							}
 						}
@@ -471,50 +501,13 @@ struct PLAYER_NAME : public Player {
 				}
 			}
 		}
-
-		for(int i = 0; i < sold.size(); ++i){
-			Ant s  = ant(sold[i]);
-			pair<int,Dir> d = BFSGuerrer(s.pos);
-				
-			if(d.first != -1){
-				if(pos_ok(s.pos + d.second)) {
-					sTracker.insert(make_pair(s.id, d.second));
-				}
-			}
-		}
-		map<int, Dir> newWorkers = checkWorkers(wTracker);
-		map<int, Dir> newSoldiers = checkSoldiers(sTracker, newWorkers);
 		
 
-		for(map<int, Dir>::iterator it = newWorkers.begin(); it != newWorkers.end(); ++it){
-			cerr << 'w' << endl;
-			Ant a = ant(it -> first);
-			move(a.id, it -> second);
-		}
-
-		for(map<int, Dir>::iterator it = newSoldiers.begin(); it != newSoldiers.end(); ++it){
-			cerr << 's' << endl;
-			Ant a = ant(it -> first);
-			Cell c = cell(a.pos + it ->second);
-			bool mine = false;
-
-			vector<int> w = workers(me());
-			for(int j = 0; j < w.size() and not mine; ++j){
-				if(c.id == w[j]) mine = true;
-			}
-			vector<int> so = soldiers(me());
-			for(int j = 0; j < so.size() and not mine; ++j){
-				if(c.id == so[j]) mine = true;
-			}
-			vector<int> q = queens(me());
-			for(int j = 0; j < q.size() and not mine; ++j){
-				if(c.id == q[j]) mine = true;
-			}
-
-			if(not mine){
-				move(it -> first, it -> second);
-			}
-			
+		for(map<Pos, int>::iterator it = moves.begin(); it != moves.end(); ++it){
+			pair<Pos, int> res = make_pair(it -> first, it -> second);
+			pair<bool, Dir> finalDirection = pos2dir(res);
+			cerr << 't' << endl;
+			if(finalDirection.first) move(it -> second, finalDirection.second);
 		}
 	}
 };
@@ -525,7 +518,6 @@ struct PLAYER_NAME : public Player {
 RegisterPlayer(PLAYER_NAME);
 
 
-/* TACTICA:
-		Com deixo al costat de la formiga madre sense que torni a mirar el element del voltant.
-		Put cpu time to check
+/* TACTICA
+	Put cpu time to check
 */
