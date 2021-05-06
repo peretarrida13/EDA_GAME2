@@ -450,9 +450,23 @@ struct PLAYER_NAME : public Player {
 					}else{
 						pair<int,Dir> d = BFSTreballadorsBonus(wrk.pos, finals);
 						if(d.first != -1){
-							if(pos_ok(wrk.pos + d.second)) {
+							Cell c1 = cell(wrk.pos + d.second);
+							if(pos_ok(wrk.pos + d.second) and c1.id == -1) {
 								if(cell(wrk.pos + d.second).id == -1) moves.insert(make_pair((wrk.pos + d.second), wrk.id));
-							}
+								else{
+									int j = 0;
+									bool found = false;
+									Pos auxiliar;
+									while(j < 4 and not found){
+										auxiliar = wrk.pos + Dir(j);
+										if(pos_ok(auxiliar) and cell(auxiliar).id == -1){
+											found = true;
+										}
+										++j;
+									}
+									if(found) moves.insert(make_pair(auxiliar, wrk.id));
+								}
+							} 
 						}
 					}
 				}
@@ -504,6 +518,7 @@ struct PLAYER_NAME : public Player {
 								if(not out) moves.insert(make_pair(a.pos +d.second,a.id));
 							}
 						}
+						
 					}
 				}
 			}
