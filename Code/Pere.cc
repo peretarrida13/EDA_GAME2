@@ -38,11 +38,13 @@ struct PLAYER_NAME : public Player {
 		if(res.i == initial.i){
       		if(res.j < initial.j) return Left;
       		else return Right;
-    	}else if(res.i < initial.i) return Up;
-      	else return Down;
+    	}else{
+      		if(res.i < initial.i) return Up;
+      		else return Down;
+    	}
 	}
 
-	pair<int, Dir> BFSGuerrer(Pos p, vector<Pos>& finals) {	
+	pair<int, Dir> BFSGuerrer(Pos p) {	
 		queue<Pos> q;
 		q.push(p);
 
@@ -56,43 +58,37 @@ struct PLAYER_NAME : public Player {
 			for(int i = 0; i < 4; ++i) {
 				Pos next = active + Dir(i);
 				Cell c = cell(next);
-				
-				bool found = false;
 
-				for(int j = 0; j < finals.size() and not found; ++j){
-					if(finals[j] == next) found = true;
-				}
-				
-				if(pos_ok(next) and c.type == Soil and not found) {
+				if(pos_ok(next) and c.type == Soil) {
 					map<Pos, bool>::iterator it  = visited.find(next);
+
 					if (it == visited.end()){
 						q.push(next);
 						visited.insert(make_pair(next, true));
 						tracker.insert(make_pair(next, active));
 					}
 					if(c.id != -1){
-						Ant aux = ant(c.id);
-						if(aux.type == Worker){
-							bool mine = false;
-							vector<int> w = workers(me());
-							vector<int> q = queens(me());
-							vector<int> s = soldiers(me());
+						bool mine = false;
 
-							for(int j = 0; j < w.size(); ++j){
-								if(w[j] == c.id) mine = true;
-							}
-							
-							for(int j = 0; j < q.size(); ++j){
-								if(q[j] == c.id) mine = true;
-							}
-							
-							for(int j = 0; j < s.size(); ++j){
-								if(s[j] == c.id) mine = true;
-							}
+						vector<int> w = workers(me());
+						for(int j = 0; j < w.size() and not mine; ++j){
+							if(c.id == w[j]) mine = true;
+						}
 
-							if(not mine){
-								Dir d = getDirection(p,next, tracker);
-								finals.push_back(next);
+						vector<int> s = soldiers(me());
+						for(int j = 0; j < s.size() and not mine; ++j){
+							if(c.id == s[j]) mine = true;
+						}
+
+						vector<int> q = queens(me());
+						for(int j = 0; j < q.size() and not mine; ++j){
+							if(c.id == q[j]) mine = true;
+						}
+
+						if(not mine){
+							Ant aux = ant(c.id);
+							if(aux.type == Worker){
+								Dir d = getDirection(p, next, tracker);
 								return make_pair(1, d);
 							}
 						}
@@ -100,10 +96,10 @@ struct PLAYER_NAME : public Player {
 				}
 			}
 		}
-		return make_pair(-1, Up);
+		return make_pair(-1, Dir(0));
 	}
 
-	pair<int,Dir> BFSTreballadorsBonus(Pos p, vector<Pos>& finals) {
+	pair<int,Dir> BFSTreballadorsBonus(Pos p) {
 		queue<Pos> q;
 		q.push(p);
 
@@ -117,9 +113,10 @@ struct PLAYER_NAME : public Player {
 			for(int i = 0; i < 4; ++i) {
 				Pos next = active + Dir(i);
 				Cell c = cell(next);
-				
-				if(pos_ok(next) and c.type == Soil and c.id == -1) {
+
+				if(pos_ok(next) and c.type == Soil) {
 					map<Pos, bool>::iterator it  = visited.find(next);
+
 					if (it == visited.end()){
 						q.push(next);
 						visited.insert(make_pair(next, true));
@@ -128,7 +125,6 @@ struct PLAYER_NAME : public Player {
 					if(c.bonus != None){
 						if(c.id == -1){
 							Dir d = getDirection(p, next, tracker);
-							finals.push_back(next);
 							return make_pair(1, d);
 						}
 					}
@@ -138,7 +134,7 @@ struct PLAYER_NAME : public Player {
 		return make_pair(-1, Dir(0));
 	}
 
-	pair<int,Dir> BFSReina(Pos p, vector<Pos>& finals) {
+	pair<int,Dir> BFSReina(Pos p) {
 		queue<Pos> q;
 		q.push(p);
 
@@ -153,7 +149,7 @@ struct PLAYER_NAME : public Player {
 				Pos next = active + Dir(i);
 				Cell c = cell(next);
 
-				if(pos_ok(next) and c.type == Soil and c.id == -1) {
+				if(pos_ok(next) and c.type == Soil) {
 					map<Pos, bool>::iterator it  = visited.find(next);
 
 					if (it == visited.end()){
@@ -163,7 +159,6 @@ struct PLAYER_NAME : public Player {
 					}
 					if(c.bonus != None){
 						Dir d = getDirection(p, next, tracker);
-						finals.push_back(next);
 						return make_pair(1, d);
 					}
 				}
@@ -173,9 +168,9 @@ struct PLAYER_NAME : public Player {
 
 	}
 
-	bool moveQueen(Ant a, map<Pos, int>& moves) {
+	void moveQueen(Ant a, map<Pos, int> moves, bool moved) {
 		int i = 0;
-		bool moved = false;
+		moved = false;
 		
 		while(i < 4 and not moved) {
 			Dir d = Dir(i);
@@ -188,14 +183,12 @@ struct PLAYER_NAME : public Player {
 			} 
 			++i;
 		}
-
-		return moved;
 	}
 
 	bool next2queen(Pos p){
 		vector<int> reina = queens(me());
-		int r_size = reina.size();
-		for(int i = 0; i < r_size; ++i){
+
+		for(int i = 0; i < reina.size(); ++i){
 			Ant a = ant(reina[i]);
 			for(int j = 0; j < 4; ++j){
 				Pos aux = a.pos + Dir(j);
@@ -222,7 +215,7 @@ struct PLAYER_NAME : public Player {
 				Pos next = active + Dir(i);
 				Cell c = cell(next);
 
-				if(pos_ok(next) and c.type == Soil) {
+				if(pos_ok(next) and c.type == Soil and c.bonus == None) {
 					map<Pos, bool>::iterator it  = visited.find(next);
 
 					if (it == visited.end()){
@@ -232,8 +225,7 @@ struct PLAYER_NAME : public Player {
 					}
 
 					vector<int> r = queens(me());
-					int r_size = r.size();
-					for(int j = 0 ; j < r_size; ++j){
+					for(int j = 0 ; j < r.size(); ++j){
 						Ant a = ant(r[j]);
 						if(next == a.pos){
 							final = next;
@@ -255,8 +247,7 @@ struct PLAYER_NAME : public Player {
 
 	bool createAnt(Ant a){
 		vector<int> r = a.reserve;
-		int r_size = r.size();
-		for(int i = 0; i < r_size; ++i){
+		for(int i = 0; i < r.size(); ++i){
 			if(r[i] == 0) return false;
 		}
 		return true;
@@ -349,55 +340,52 @@ struct PLAYER_NAME : public Player {
 
 		if(inici.i == final.i){
 			if(inici.j < final.j){
-				return make_pair(true, Right);
+				if(pos_ok(inici + Right)) return make_pair(true, Right);
 			} else{
-				return make_pair(true, Left);
+				if(pos_ok(inici + Left)) return make_pair(true, Left);
 			}
 		} else if(inici.i < final.i){
-			return make_pair(true, Down);
+			if(pos_ok(inici + Up)) return make_pair(true, Down);
 		} else{
-			return make_pair(true, Up);
+			if(pos_ok(inici + Down)) return make_pair(true, Up);
 		}
 
 		return make_pair(false, Dir(random(0, 3)));
 	}
 
 	virtual void play(){
-		vector<int> r = queens(me());
-		int r_size = r.size();
+		vector<int> r = queens(me());	
 		vector<int> wrks = workers(me());
-		int w_size = wrks.size();
 		vector<int> sold = soldiers(me());
-		int s_size = sold.size();
 
 		vector<Pos> finals;
 		map<Pos, int> moves;
 
-		for(int i = 0; i < s_size; ++i){
+		for(int i = 0; i < sold.size(); ++i){
 			Ant s  = ant(sold[i]);
-			pair<int,Dir> d = BFSGuerrer(s.pos, finals);
+			pair<int,Dir> d = BFSGuerrer(s.pos);
 				
 			if(d.first != -1){
 				if(pos_ok(s.pos + d.second)) {
 					bool mine = false;
-					Cell c = cell(s.pos + d.second);
-					for(int j = 0; j < w_size; ++j){
-						if(wrks[j] == c.id) mine = true;
+					for(int j = 0; j < r.size() and not mine; ++j){
+						if(r[j] == cell(s.pos + d.second).id) mine = true;
 					}
-						
-					for(int j = 0; j < r_size; ++j){
-						if(r[j] == c.id) mine = true;
+
+					for(int j = 0; j < wrks.size() and not mine; ++j){
+						if(wrks[j] == cell(s.pos + d.second).id) mine = true;
 					}
-						
-					for(int j = 0; j < s_size; ++j){
-						if(sold[j] == c.id) mine = true;
+
+					for(int j = 0; j < sold.size() and not mine; ++j){
+						if(sold[j] == cell(s.pos + d.second).id) mine = true;
 					}
-					if(not mine) moves.insert(make_pair((s.pos + d.second), s.id));	
+
+					if(not mine) moves.insert(make_pair((s.pos + d.second), s.id));
 				}
 			}
 		}
 			
-		for(int i = 0; i < w_size; ++i){
+		for(int i = 0; i < wrks.size(); ++i){
 			Ant wrk  = ant(wrks[i]);
 			Cell c = cell(wrk.pos);
 
@@ -405,52 +393,18 @@ struct PLAYER_NAME : public Player {
 				if(wrk.bonus != None) leave(wrk.id);
 				else{
 					if(c.bonus != None){
-						for(int j = 0; j < r_size; ++j){
-							Ant a = ant(r[j]);
-							
-							if(wrk.pos.i == a.pos.i){
-								if(wrk.pos.i < a.pos.i){
-									if(pos_ok(wrk.pos + Left) and cell(wrk.pos + Left).id == -1) moves.insert(make_pair((wrk.pos + Left), wrk.id));
-									else{
-										if(pos_ok(wrk.pos + Up) and cell(wrk.pos + Up).id == -1) moves.insert(make_pair((wrk.pos + Up), wrk.id));
-										else{
-											if(cell(wrk.pos + Down).id == -1) moves.insert(make_pair((wrk.pos + Down), wrk.id));
-										} 
-									}
-								} else{
-									if(pos_ok(wrk.pos + Right) and cell(wrk.pos + Right).id == -1) moves.insert(make_pair((wrk.pos + Right), wrk.id));
-									else{
-										if(pos_ok(wrk.pos + Up) and cell(wrk.pos + Up).id == -1) moves.insert(make_pair((wrk.pos + Up), wrk.id));
-										else{
-											if(cell(wrk.pos + Down).id == -1) moves.insert(make_pair((wrk.pos + Down), wrk.id));
-										} 
-									}
-								}
-							} 
-							if(wrk.pos.j == a.pos.j){
-								if(wrk.pos.i < a.pos.i){
-									if(pos_ok(wrk.pos + Up) and cell(wrk.pos + Up).id == -1) moves.insert(make_pair((wrk.pos + Up), wrk.id));
-									else{
-										if(pos_ok(wrk.pos+ Left) and cell(wrk.pos + Left).id == -1) moves.insert(make_pair((wrk.pos + Left), wrk.id));
-										else{
-											if(cell(wrk.pos + Right).id == -1) moves.insert(make_pair((wrk.pos + Right), wrk.id));
-										}
-									}
-								} else{
-									if(pos_ok(wrk.pos + Down)and cell(wrk.pos + Down).id == -1) moves.insert(make_pair((wrk.pos + Down), wrk.id));
-									else{
-										if(pos_ok(wrk.pos + Left) and cell(wrk.pos + Left).id == -1) moves.insert(make_pair((wrk.pos + Left), wrk.id));
-										else{
-											if(cell(wrk.pos + Right).id == -1) moves.insert(make_pair((wrk.pos + Right), wrk.id));
-										} 
-									}
-								}
-							}
-						}
-					}else{
-						pair<int,Dir> d = BFSTreballadorsBonus(wrk.pos, finals);
+						pair<int,Dir> d = BFSTreballadorsBonus(wrk.pos);
 						if(d.first != -1){
 							if(pos_ok(wrk.pos + d.second)) {
+								Cell c = cell(wrk.pos + d.second);
+								if(cell(wrk.pos + d.second).id == -1) moves.insert(make_pair((wrk.pos + d.second), wrk.id));
+							}
+						}						
+					}else{
+						pair<int,Dir> d = BFSTreballadorsBonus(wrk.pos);
+						if(d.first != -1){
+							if(pos_ok(wrk.pos + d.second)) {
+								Cell c = cell(wrk.pos + d.second);
 								if(cell(wrk.pos + d.second).id == -1) moves.insert(make_pair((wrk.pos + d.second), wrk.id));
 							}
 						}
@@ -465,10 +419,11 @@ struct PLAYER_NAME : public Player {
 				} else{
 					if(c.bonus != None) take(wrk.id);
 					else{
-						pair<int,Dir> d = BFSTreballadorsBonus(wrk.pos, finals);
+						pair<int,Dir> d = BFSTreballadorsBonus(wrk.pos);
 				
 						if(d.first != -1){
 							if(pos_ok(wrk.pos + d.second)){
+								Cell c = cell(wrk.pos + d.second);
 								if(not next2queen(wrk.pos + d.second)){
 									if(cell(wrk.pos + d.second).id == -1) moves.insert(make_pair((wrk.pos + d.second), wrk.id));
 								}
@@ -479,9 +434,11 @@ struct PLAYER_NAME : public Player {
 			}
 		}
 
-		for(int i = 0; i < r_size; ++i){
+		for(int i = 0; i < r.size(); ++i){
 			Ant a = ant(r[i]);
-			if(not moveQueen(a, moves)){
+			bool moved = false;
+			moveQueen(a, moves, moved);
+			if(not moved){
 				if(createAnt(a)){
 					if(wrks.size() <= sold.size()){
 						for(int j = 0; j < 4; ++j){
@@ -496,22 +453,24 @@ struct PLAYER_NAME : public Player {
 				} else{
 					bool around = antAround(a.pos);
 					if(not around){
-						pair<int, Dir> d = BFSReina(a.pos, finals);
+						pair<int, Dir> d = BFSReina(a.pos);
 						if(d.first != -1){
 							if(pos_ok(a.pos + d.second) and cell(a.pos + d.second).id == -1){
 								int quadrant = identQuadrant(a.pos);
 								bool out = outOfQuadrant(a.pos+d.second, quadrant);
-								if(not out) moves.insert(make_pair(a.pos +d.second,a.id));
+								if(not out) move(a.id, d.second);
 							}
 						}
 					}
 				}
 			}
 		}
+		
 
 		for(map<Pos, int>::iterator it = moves.begin(); it != moves.end(); ++it){
 			pair<Pos, int> res = make_pair(it -> first, it -> second);
 			pair<bool, Dir> finalDirection = pos2dir(res);
+			cerr << 't' << endl;
 			if(finalDirection.first) move(it -> second, finalDirection.second);
 		}
 	}
