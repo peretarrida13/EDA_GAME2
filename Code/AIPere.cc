@@ -673,12 +673,20 @@ struct PLAYER_NAME : public Player {
 			}
 				
 		}
+		 
+		if(me() == 2){
+			for(map<Pos, int>::iterator it = moves.begin(); it != moves.end(); ++it){
+				pair<Pos, int> res = make_pair(it -> first, it -> second);
+				pair<bool, Dir> finalDirection = pos2dir(res);
+				if(finalDirection.first) move(it -> second, finalDirection.second);
+			}
 
-		
-		for(map<Pos, int>::iterator it = moves.begin(); it != moves.end(); ++it){
-			pair<Pos, int> res = make_pair(it -> first, it -> second);
-			pair<bool, Dir> finalDirection = pos2dir(res);
-			if(finalDirection.first) move(it -> second, finalDirection.second);
+		}else{
+			for(map<Pos, int>::iterator it = moves.begin(); it != moves.end(); ++it){
+				pair<Pos, int> res = make_pair(it -> first, it -> second);
+				pair<bool, Dir> finalDirection = pos2dir(res);
+				if(finalDirection.first and cell(it -> first).type == Soil) move(it -> second, finalDirection.second);
+			}
 		}
 	}
 };
