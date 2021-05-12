@@ -4,7 +4,7 @@
  * Write the name of your player and save this file
  * with the same name and .cc extension.
  */
-#define PLAYER_NAME Pere
+#define PLAYER_NAME  Brusi52
 
 struct PLAYER_NAME : public Player {
 
@@ -24,7 +24,7 @@ struct PLAYER_NAME : public Player {
 	 * We use the tracker to get the direction where it
 	 * should move next
 	 */ 
-	Dir getDirection(Pos initial, Pos final, map<Pos, Pos> tracker){
+	Dir getDirection(const Pos& initial, const Pos& final, map<Pos, Pos>& tracker){
 		//
 		Pos active = final;
 		Pos res; 
@@ -42,7 +42,7 @@ struct PLAYER_NAME : public Player {
       	else return Down;
 	}
 
-	pair<int, Dir> BFSGuerrerPrimer(Pos p, vector<Pos>& finals, bool& first) {	
+	pair<int, Dir> BFSGuerrerPrimer(const Pos& p, vector<Pos>& finals, bool& first) {	
 		queue<Pos> q;
 		q.push(p);
 
@@ -103,7 +103,7 @@ struct PLAYER_NAME : public Player {
 		return make_pair(-1, Up);
 	}
 
-	pair<int, Dir> BFSGuerrer(Pos p, vector<Pos>& finals, bool& first) {	
+	pair<int, Dir> BFSGuerrer(const Pos& p, vector<Pos>& finals, bool& first) {	
 		queue<Pos> q;
 		q.push(p);
 		int quadrant1 = identQuadrant(p);
@@ -164,7 +164,7 @@ struct PLAYER_NAME : public Player {
 		return make_pair(-1, Up);
 	}
 
-	pair<int,Dir> BFSTreballadorsBonus(Pos p, vector<Pos>& finals) {
+	pair<int,Dir> BFSTreballadorsBonus(const Pos& p, vector<Pos>& finals) {
 		queue<Pos> q;
 		q.push(p);
 
@@ -199,7 +199,7 @@ struct PLAYER_NAME : public Player {
 		return make_pair(-1, Dir(0));
 	}
 
-	pair<int,Dir> BFSReina(Pos p, vector<Pos>& finals) {
+	pair<int,Dir> BFSReina(const Pos& p, vector<Pos>& finals) {
 		queue<Pos> q;
 		q.push(p);
 
@@ -234,7 +234,7 @@ struct PLAYER_NAME : public Player {
 		return make_pair(-1, Dir(0));
 	}
 
-	pair<int, Dir> BFSReinaMatar(Pos p, vector<Pos>& finals) {	
+	pair<int, Dir> BFSReinaMatar(const Pos& p, vector<Pos>& finals) {	
 		queue<Pos> q;
 		q.push(p);
 
@@ -296,7 +296,7 @@ struct PLAYER_NAME : public Player {
 		return make_pair(-1, Up);
 	}
 
-	bool moveQueen(Ant a, map<Pos, int>& moves) {
+	bool moveQueen(Ant& a, map<Pos, int>& moves) {
 		int i = 0;
 		bool moved = false;
 		
@@ -318,7 +318,7 @@ struct PLAYER_NAME : public Player {
 		return moved;
 	}
 
-	bool next2queen(Pos p){
+	bool next2queen(const Pos& p){
 		vector<int> reina = queens(me());
 		int r_size = reina.size();
 		for(int i = 0; i < r_size; ++i){
@@ -331,7 +331,7 @@ struct PLAYER_NAME : public Player {
 		return false;
 	}
 
-	pair<int, Dir> move2queen(Pos p, int id){
+	pair<int, Dir> move2queen(const Pos& p, int& id){
 		Pos final;
 		queue<Pos> q;
 		q.push(p);
@@ -379,7 +379,7 @@ struct PLAYER_NAME : public Player {
 		}
 	}
 
-	bool createAnt(Ant a){
+	bool createAnt(Ant& a){
 		vector<int> r = a.reserve;
 		int r_size = r.size();
 		for(int i = 0; i < r_size; ++i){
@@ -389,7 +389,7 @@ struct PLAYER_NAME : public Player {
 		return true;
 	}
 
-	bool antAround(Pos p){
+	bool antAround(const Pos& p){
 		for(int i = 0; i < 4; ++i){
 			Cell c;
 			
@@ -423,7 +423,7 @@ struct PLAYER_NAME : public Player {
 		return false;
 	}
 
-	int identQuadrant(Pos p){
+	int identQuadrant(const Pos& p){
 		int c = board_cols();
 		int r = board_rows();
 
@@ -433,7 +433,7 @@ struct PLAYER_NAME : public Player {
 		else return 4;
 	}
 
-	bool outOfQuadrant(Pos p, int i){
+	bool outOfQuadrant(const Pos& p, int& i){
 		int q = identQuadrant(p);
 		if(i != q) return true;
 		else return false;
@@ -443,7 +443,7 @@ struct PLAYER_NAME : public Player {
 	 * Play method, invoked once per each round.
 	*/
 
-	pair<bool, Dir> pos2dir(pair<Pos, int> p){
+	pair<bool, Dir> pos2dir(pair<Pos, int>& p){
 		Pos final = p.first;
 		Ant a = ant(p.second);
 		Pos inici = a.pos;
